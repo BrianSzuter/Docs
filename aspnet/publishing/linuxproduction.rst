@@ -121,9 +121,11 @@ To have supervisor monitor our application, we will add a file to the ``/etc/sup
     autorestart=true
     stderr_logfile=/var/log/hellomvc.err.log
     stdout_logfile=/var/log/hellomvc.out.log
-    environment=ASPNETCORE_ENVIRONMENT=Production
+    environment=HOME=/var/www/,ASPNETCORE_ENVIRONMENT=Production
     user=www-data
     stopsignal=INT
+    stopasgroup=true
+    killasgroup=true
 
 Once you are done editing the configuration file, restart the ``supervisord`` process to change the set of programs controlled by supervisord.
 
@@ -223,15 +225,13 @@ Configure SSL
 - Adding an ``HTTP Strict-Transport-Security`` (HSTS) header ensures all subsequent requests made by the client are over HTTPS only.
 - Do not add the Strict-Transport-Security header or chose an appropriate ``max-age`` if you plan to disable SSL in the future.
 
-.. literalinclude:: linuxproduction/nginx.conf
-  :language: nginx
-  :emphasize-lines: 2
+Add ``/etc/nginx/proxy.conf`` configuration file.
 
 .. literalinclude:: linuxproduction/proxy.conf
   :language: nginx
 
+Edit ``/etc/nginx/nginx.conf`` configuration file. The example contains both http and server sections in one configuration file.
 
-
-
-
-
+.. literalinclude:: linuxproduction/nginx.conf
+  :language: nginx
+  :emphasize-lines: 2

@@ -14,7 +14,7 @@ In the previous article we :doc:`migrated configuration from an ASP.NET MVC proj
 Configure Identity and Membership
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In ASP.NET MVC, authentication and identity features are configured using ASP.NET Identity in Startup.Auth.cs and IdentityConfig.cs, located in the App_Start folder. In ASP.NET Core MVC, these features are configured in *Startup.cs*. Before pulling in the required services and configuring them, we should add the required dependencies to the project. Open *project.json* and add ``Microsoft.AspNetCore.Identity.EntityFramework`` and ``Microsoft.AspNetCore.Identity.Cookies`` to the list of dependencies:
+In ASP.NET MVC, authentication and identity features are configured using ASP.NET Identity in Startup.Auth.cs and IdentityConfig.cs, located in the App_Start folder. In ASP.NET Core MVC, these features are configured in *Startup.cs*. Before pulling in the required services and configuring them, we should add the required dependencies to the project. Open *project.json* and add ``Microsoft.AspNetCore.Identity.EntityFramework`` and ``Microsoft.AspNetCore.Authentication.Cookies`` to the list of dependencies:
 
 .. code-block:: none
 
@@ -124,26 +124,27 @@ Update _LoginPartial.cshtml with the following code (replace all of its contents
 
 .. code-block:: c#
 
-  @using System.Security.Principal
+  @inject SignInManager<User> SignInManager
+  @inject UserManager<User> UserManager
 
-  @if (User.Identity.IsAuthenticated)
+  @if (SignInManager.IsSignedIn(User))
   {
-      using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
-      {
-          @Html.AntiForgeryToken()
+      <form asp-area="" asp-controller="Account" asp-action="LogOff" method="post" id="logoutForm" class="navbar-right">
           <ul class="nav navbar-nav navbar-right">
               <li>
-                  @Html.ActionLink("Hello " + User.Identity.GetUserName() + "!", "Manage", "Account", routeValues: null, htmlAttributes: new { title = "Manage" })
+                  <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage">Hello @UserManager.GetUserName(User)!</a>
               </li>
-              <li><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
+              <li>
+                  <button type="submit" class="btn btn-link navbar-btn navbar-link">Log off</button>
+              </li>
           </ul>
-      }
+      </form>
   }
   else
   {
       <ul class="nav navbar-nav navbar-right">
-          <li>@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink" })</li>
-          <li>@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+          <li><a asp-area="" asp-controller="Account" asp-action="Register">Register</a></li>
+          <li><a asp-area="" asp-controller="Account" asp-action="Login">Log in</a></li>
       </ul>
   }
 

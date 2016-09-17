@@ -46,8 +46,8 @@ Proceed through the **Confirmation** step to enable the web server role and serv
 Install the .NET Core Windows Server Hosting bundle
 ---------------------------------------------------
 
-#. Install the `.NET Core Windows Server Hosting <https://go.microsoft.com/fwlink/?LinkId=817246>`__ bundle on the server. The bundle will install the .NET Core Runtime, .NET Core Library, and the ASP.NET Core Module. The module creates the reverse-proxy between IIS and the Kestrel server.
-#. Execute **iisreset** at the command line or restart the server to pickup changes to the system PATH.
+#. Install the `.NET Core Windows Server Hosting <https://go.microsoft.com/fwlink/?LinkID=827547>`__ bundle on the server. The bundle will install the .NET Core Runtime, .NET Core Library, and the ASP.NET Core Module. The module creates the reverse-proxy between IIS and the Kestrel server.
+#. Restart the server or execute **net stop was /y** followed by **net start w3svc** from the command-line to pickup changes to the system PATH.
 
 For more information on the ASP.NET Core Module, including configuration of the module and setting environment variables with *web.config*, the use of *app_offline.htm* to suspend request processing, and activation of module logging, see :doc:`ASP.NET Core Module Configuration Reference </hosting/aspnet-core-module>`.
 
@@ -155,7 +155,7 @@ Set the **.NET CLR version** to **No Managed Code**.
 
 Browse the website.
 
-        .. image:: iis/_static/browsewebsite.png
+  .. image:: iis/_static/browsewebsite.png
 
 Create a Data Protection Registry Hive
 --------------------------------------
@@ -167,6 +167,11 @@ For standalone IIS installations, you may use the `Data Protection Provision-Aut
 In web farm scenarios, an application can be configured to use a UNC path to store its data protection key ring. By default, the data protection keys are not encrypted. You can deploy an x509 certificate to each machine to encrypt the key ring. See :ref:`Configuring Data Protection <data-protection-configuring>` for details.
 
 .. include:: ./dataProtectionWarning.txt
+
+Configuration of sub-applications
+---------------------------------
+
+When adding applications to an IIS Site's root application, the root application *web.config* file should include the ``<handlers>`` section, which adds the ASP.NET Core Module as a handler for the app. Applications added to the root application shouldn't include the ``<handlers>`` section. If you repeat the ``<handlers>`` section in a sub-application's *web.config* file, you will receive a 500.19 (Internal Server Error) referencing the faulty config file when you attempt to browse the sub-application.
 
 Common errors
 -------------
@@ -262,9 +267,9 @@ Hosting bundle not installed or server not restarted
 Troubleshooting:
 
 - You may have deployed a portable application without installing .NET Core on the server. If you are attempting to deploy a portable application and have not installed .NET Core, run the **.NET Core Windows Server Hosting Bundle Installer** on the server. See `Install the .NET Core Windows Server Hosting Bundle`_.
-- You may have deployed a portable application and installed .NET Core without restarting the server. Restart the server.
+- You may have deployed a portable application and installed .NET Core without restarting IIS. Either restart the server or restart IIS by executing **net stop was /y** followed by **net start w3svc** from the command-line.
 
-Incorrect `proecessPath`, missing PATH variable, or *dotnet.exe* access violation
+Incorrect `processPath`, missing PATH variable, or *dotnet.exe* access violation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - **Browser:** HTTP Error 502.5 - Process Failure
@@ -276,6 +281,7 @@ Troubleshooting:
 - Check the `processPath` attribute on the `\<aspNetCore\>` element in *web.config* to confirm that it is `dotnet` for a portable application or `.\\my_application.exe` for a self-contained application.
 - For a portable application, *dotnet.exe* might not be accessible via the PATH settings. Confirm that `C:\\Program Files\\dotnet\\` exists in the System PATH settings.
 - For a portable application, *dotnet.exe* might not be accessible for the user identity of the Application Pool. Confirm that the AppPool user identity has access to the `C:\\Program Files\\dotnet` directory.
+- You may have deployed a portable application and installed .NET Core without restarting IIS. Either restart the server or restart IIS by executing **net stop was /y** followed by **net start w3svc** from the command-line.
 
 Incorrect `arguments` of `\<aspNetCore\>` element
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -321,6 +327,17 @@ Troubleshooting
 
 - Confirm that you have correctly referenced the IIS Integration middleware by calling the `.UseIISIntegration()` method of the application's `WebHostBuilder()`.
 - If you are using the `.UseUrls()` extension method when self-hosting with Kestrel, confirm that it is positioned before the `.UseIISIntegration()` extension method on `WebHostBuilder()`. `.UseIISIntegration()` must set the Url for the reverse-proxy when running Kestrel behind IIS and not have its value overridden by `.UseUrls()`.
+
+Sub-application includes a ``<handlers>`` section
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- **Browser:** HTTP Error 500.19 - Internal Server Error
+- **Application Log:** No entry
+- **ASP.NET Core Module Log:** Log file created and shows normal operation for the root application. Log file not created for the sub-application.
+
+Troubleshooting
+
+- Confirm that the sub-application's *web.config* file doesn't include a ``<handlers>`` section.
 
 Additional resources
 --------------------
